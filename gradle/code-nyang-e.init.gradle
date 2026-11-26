@@ -11,6 +11,12 @@ allprojects {
     tasks.named('jacocoTestReport') {
       reports { xml.required = true }   // Sonar가 읽는 XML
     }
+    // 테스트 실패도 결과로 게시 (2026-11-26 결정 B). 검사기가 -PcnyIgnoreTestFailures=true를
+    // 넘길 때만 실패한 테스트가 있어도 빌드를 이어 가요. 실패 수는 test-results XML에서 세요.
+    // 컴파일 실패처럼 빌드 자체가 깨지면 여전히 멈춰요.
+    if (project.findProperty('cnyIgnoreTestFailures') == 'true') {
+      tasks.withType(Test).configureEach { ignoreFailures = true }
+    }
   }
 }
 

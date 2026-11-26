@@ -35,7 +35,7 @@
     }
   },
   "newCodeDefinition": { "type": "days", "value": "30" },
-  "tests": { "total": 12, "failed": 0, "skipped": 2 },
+  "tests": { "total": 12, "failed": 1, "skipped": 2 },
   "claude": {
     "counts": { "transaction": 0, "concurrency": 0, "scale": 0, "failure": 0, "other": 0 },
     "findings": []

@@ -3,8 +3,9 @@
 //
 // Jenkins credentials (Secret text): sonar-token, claude-token, github-token.
 // The target repo is only read: it is cloned into target/ and built there.
-// v1 rules: failed tests stop the build (nothing is published); a failed review
-// publishes claude = null; a failed quality gate is a result, not an error.
+// Rules: failed tests are a result (decision B, 2026-11-26): the build goes on, is marked
+// UNSTABLE and publishes tests.failed; a build that cannot compile or run tests stops.
+// A failed review publishes claude = null; a failed quality gate is a result, not an error.
 
 pipeline {
   agent any
@@ -65,8 +66,14 @@ pipeline {
     stage('test') {
       steps {
         // rehab's gradlew has no exec bit; run it through sh instead of changing the repo.
+        // cnyIgnoreTestFailures: failing tests do not fail Gradle; junit below marks UNSTABLE.
         dir('target') {
-          sh 'sh ./gradlew --no-daemon --init-script "$INIT" test'
+          sh 'sh ./gradlew --no-daemon --init-script "$INIT" -PcnyIgnoreTestFailures=true test'
+        }
+      }
+      post {
+        always {
+          junit allowEmptyResults: true, testResults: 'target/build/test-results/test/*.xml'
         }
       }
     }
@@ -144,7 +151,6 @@ pipeline {
 
   post {
     always {
-      junit allowEmptyResults: true, testResults: 'target/build/test-results/test/*.xml'
       archiveArtifacts artifacts: 'out/claude/findings.json, out/site/**', allowEmptyArchive: true
     }
   }

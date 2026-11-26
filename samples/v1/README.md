@@ -9,7 +9,7 @@ projects/rehab/latest.json        gate passed, 5 Claude findings (all categories
                                   all optional Sonar fields (ratings, linesToCover/uncoveredLines,
                                   hotspots, acceptedIssues, newCodeDefinition)
 projects/rehab/history.json       6 runs, oldest first; includes failed gates and a run without review
-projects/demo-failed/latest.json  gate failed (2 failed conditions), nulls (newCode.coverage, a gate
+projects/demo-failed/latest.json  gate failed (2 failed conditions), 1 failing test, nulls (newCode.coverage, a gate
                                   actual, an issue count), 0 findings, empty opinion, optional fields
                                   left out, a file-level and a project-level Sonar issue
 ```

@@ -104,7 +104,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["total", "failed", "skipped"],
-      "description": "From build/test-results XML. v1 does not publish runs whose tests failed.",
+      "description": "From build/test-results XML. failed counts failures and errors. Runs with failing tests are published too (decision 2026-11-26); a build that cannot compile or run tests is not published.",
       "properties": {
         "total": { "type": "integer", "minimum": 0 },
         "failed": { "type": "integer", "minimum": 0 },
