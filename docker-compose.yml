@@ -85,6 +85,9 @@ services:
       # Plugins from the image may upgrade ones the setup wizard installed
       # (those have no version marker files).
       TRY_UPGRADE_IF_NO_MARKER: "true"
+      # report/allowlist.py blocks these strings from anything published. COMPUTERNAME
+      # comes from the Windows shell that runs docker compose, so it is not in the repo.
+      CNY_FORBIDDEN_STRINGS: "${COMPUTERNAME:-}"
     volumes:
       - jenkins_home:/var/jenkins_home
     ports:

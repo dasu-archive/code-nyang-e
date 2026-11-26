@@ -147,7 +147,11 @@ pipeline {
     stage('publish') {
       when { expression { params.PUBLISH } }
       steps {
-        error('publish (T11) is not implemented yet')
+        // Pushes only projects.json and projects/<id>/{latest,history}.json + index.html
+        // to dasu-archive/dashboard (folder ownership of data contract v1).
+        withCredentials([string(credentialsId: 'github-token', variable: 'GH_TOKEN')]) {
+          sh 'bash report/publish.sh "$PROJECT_ID" "$OUT/site"'
+        }
       }
     }
   }
