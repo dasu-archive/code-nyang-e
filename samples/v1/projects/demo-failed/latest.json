@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "id": "demo-failed",
+    "name": "demo-failed",
+    "repo": "dasu-archive/demo-failed"
+  },
+  "run": {
+    "at": "2026-11-26T20:30:00+09:00",
+    "commit": "00000000000000000000000000000000000000d1",
+    "branch": "main",
+    "build": 3
+  },
+  "qualityGate": {
+    "status": "failed",
+    "conditions": [
+      { "metric": "newIssues", "comparator": "gt", "threshold": 0, "actual": 3, "status": "failed" },
+      { "metric": "newHotspotsReviewed", "comparator": "lt", "threshold": 100, "actual": null, "status": "passed" },
+      { "metric": "newCoverage", "comparator": "lt", "threshold": 80, "actual": null, "status": "passed" },
+      { "metric": "newDuplication", "comparator": "gt", "threshold": 3, "actual": 7.8, "status": "failed" }
+    ]
+  },
+  "metrics": {
+    "overall": {
+      "coverage": 38.9,
+      "duplication": 6.3,
+      "lines": 820,
+      "issues": { "reliability": 1, "security": 1, "maintainability": 2 },
+      "acceptedIssues": null
+    },
+    "newCode": {
+      "coverage": null,
+      "duplication": 7.8,
+      "issues": { "reliability": 1, "security": null, "maintainability": 2 }
+    }
+  },
+  "newCodeDefinition": { "type": "days", "value": "30" },
+  "tests": { "total": 12, "failed": 0, "skipped": 2 },
+  "claude": {
+    "counts": { "transaction": 0, "concurrency": 0, "scale": 0, "failure": 0, "other": 0 },
+    "findings": []
+  },
+  "sonarIssues": [
+    {
+      "rule": "java:S2142",
+      "impacts": [
+        { "quality": "reliability", "severity": "high" },
+        { "quality": "maintainability", "severity": "medium" }
+      ],
+      "file": "src/main/java/com/example/demo/worker/RetryWorker.java",
+      "line": 47,
+      "message": "Either re-interrupt this method or rethrow the \"InterruptedException\" that can be caught here."
+    },
+    {
+      "rule": "java:S5332",
+      "impacts": [{ "quality": "security", "severity": "low" }],
+      "file": "src/main/resources/application.yml",
+      "line": null,
+      "message": "Using http protocol is insecure. Use https instead."
+    },
+    {
+      "rule": "java:S1451",
+      "impacts": [{ "quality": "maintainability", "severity": "low" }],
+      "file": null,
+      "line": null,
+      "message": "Add or update the license header required for this project."
+    }
+  ],
+  "opinion": {
+    "paragraphs": []
+  }
+}

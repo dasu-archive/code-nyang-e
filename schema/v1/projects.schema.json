@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "code-nyang-e projects.json (data contract v1)",
+  "description": "projects.json at the dashboard repo root: one summary row per registered project. Written by code-nyang-e. Each row repeats values from that project's latest.json, so the two always agree.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "updatedAt", "projects"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "updatedAt": { "$ref": "#/$defs/time" },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "repo", "lastRunAt", "qualityGate", "coverage", "claudeFindings"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "projects.yml id; also the folder name projects/<id>/." },
+          "name": { "type": "string", "minLength": 1 },
+          "repo": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+          "lastRunAt": { "$ref": "#/$defs/time", "description": "Same as run.at in latest.json." },
+          "qualityGate": { "enum": ["passed", "failed", null], "description": "Same as qualityGate.status in latest.json." },
+          "coverage": { "type": ["number", "null"], "minimum": 0, "maximum": 100, "description": "Same value as metrics.overall.coverage in latest.json." },
+          "claudeFindings": { "type": ["integer", "null"], "minimum": 0, "description": "Number of claude.findings in latest.json. null when that run has no review (claude is null)." }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "time": { "type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?\\+09:00$" }
+  }
+}

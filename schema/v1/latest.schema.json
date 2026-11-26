@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "code-nyang-e latest.json (data contract v1)",
+  "description": "projects/<id>/latest.json: the newest inspection result for one project. Written by code-nyang-e (internal), read by the dashboard (external). Rules: field names are ours, not Sonar's; values are lowercase except ratings A-E; unknown values are null (0 only when it is really 0); times are ISO 8601 with +09:00; file paths are relative to the target repo root; percentages are 0-100 with one decimal. Fields marked optional may be missing or null and the dashboard hides that block. additionalProperties is false everywhere: this schema is also the allowlist of what may be published.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "project", "run", "qualityGate", "metrics", "tests", "claude", "sonarIssues", "opinion"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "repo"],
+      "properties": {
+        "id": { "$ref": "#/$defs/projectId" },
+        "name": { "type": "string", "minLength": 1 },
+        "repo": { "$ref": "#/$defs/repo" }
+      }
+    },
+
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "commit", "branch", "build"],
+      "properties": {
+        "at": { "$ref": "#/$defs/time", "description": "Jenkins build start time." },
+        "commit": { "$ref": "#/$defs/sha" },
+        "branch": { "type": "string", "minLength": 1 },
+        "build": { "type": "integer", "minimum": 1, "description": "Jenkins BUILD_NUMBER." }
+      }
+    },
+
+    "qualityGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "conditions"],
+      "properties": {
+        "status": { "$ref": "#/$defs/gateStatusOrNull", "description": "api/qualitygates/project_status: OK -> passed, ERROR -> failed, anything else -> null." },
+        "conditions": {
+          "type": "array",
+          "description": "Every condition of the gate, passed and failed. Empty when status is null.",
+          "items": { "$ref": "#/$defs/gateCondition" }
+        }
+      }
+    },
+
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "newCode"],
+      "properties": {
+        "overall": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["coverage", "duplication", "lines", "issues"],
+          "properties": {
+            "coverage": { "$ref": "#/$defs/percentOrNull" },
+            "duplication": { "$ref": "#/$defs/percentOrNull" },
+            "lines": { "$ref": "#/$defs/countOrNull", "description": "Lines of code (Sonar ncloc)." },
+            "issues": { "$ref": "#/$defs/issueCounts" },
+            "ratings": { "$ref": "#/$defs/ratings" },
+            "linesToCover": { "$ref": "#/$defs/countOrNull", "description": "Optional." },
+            "uncoveredLines": { "$ref": "#/$defs/countOrNull", "description": "Optional." },
+            "hotspots": { "$ref": "#/$defs/hotspots" },
+            "acceptedIssues": { "$ref": "#/$defs/countOrNull", "description": "Optional." }
+          }
+        },
+        "newCode": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["coverage", "duplication", "issues"],
+          "properties": {
+            "coverage": { "$ref": "#/$defs/percentOrNull", "description": "null when there is no new code to cover." },
+            "duplication": { "$ref": "#/$defs/percentOrNull" },
+            "issues": { "$ref": "#/$defs/issueCounts" },
+            "ratings": { "$ref": "#/$defs/ratings" },
+            "linesToCover": { "$ref": "#/$defs/countOrNull", "description": "Optional." },
+            "uncoveredLines": { "$ref": "#/$defs/countOrNull", "description": "Optional." },
+            "hotspots": { "$ref": "#/$defs/hotspots" },
+            "acceptedIssues": { "$ref": "#/$defs/countOrNull", "description": "Optional." }
+          }
+        }
+      }
+    },
+
+    "newCodeDefinition": {
+      "description": "Optional. api/new_code_periods/show.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "enum": ["previous_version", "days", "reference_branch", "specific_analysis"] },
+            "value": { "type": ["string", "null"], "description": "String or null, e.g. \"30\" for days, a branch name for reference_branch." }
+          }
+        }
+      ]
+    },
+
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "failed", "skipped"],
+      "description": "From build/test-results XML. v1 does not publish runs whose tests failed.",
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "claude": {
+      "description": "Claude review. null as a whole when the review failed (then opinion is null too).",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["counts", "findings"],
+          "properties": {
+            "counts": { "$ref": "#/$defs/claudeCounts", "description": "Counted from findings by the script." },
+            "findings": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/finding" }
+            }
+          }
+        }
+      ]
+    },
+
+    "sonarIssues": {
+      "type": "array",
+      "description": "All open issues from api/issues/search: accepted, false positive and closed issues are left out. No upper limit; if Sonar has more than its 10,000-result search cap the report fails and nothing is published. Issues from secret-detection rules (secrets:*) are never published, so the list can be shorter than metrics.*.issues.",
+      "items": { "$ref": "#/$defs/sonarIssue" }
+    },
+
+    "opinion": {
+      "description": "Overall opinion from claude -p: interpretation only, quoting numbers that are already in this file. null when the review failed.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["paragraphs"],
+          "properties": {
+            "paragraphs": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          }
+        }
+      ]
+    }
+  },
+
+  "$defs": {
+    "projectId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "projects.yml id: lowercase letters, digits, hyphens." },
+    "repo": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", "description": "owner/name." },
+    "time": { "type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?\\+09:00$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "Full commit SHA." },
+    "percentOrNull": { "type": ["number", "null"], "minimum": 0, "maximum": 100, "description": "0-100, one decimal." },
+    "countOrNull": { "type": ["integer", "null"], "minimum": 0 },
+    "ratingOrNull": { "enum": ["A", "B", "C", "D", "E", null] },
+    "gateStatusOrNull": { "enum": ["passed", "failed", null] },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\][^\\\\:]*$",
+      "not": { "pattern": "(^|/)\\.\\.(/|$)" },
+      "description": "Relative to the target repo root, forward slashes, no drive letters, no '..'."
+    },
+
+    "issueCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reliability", "security", "maintainability"],
+      "properties": {
+        "reliability": { "$ref": "#/$defs/countOrNull" },
+        "security": { "$ref": "#/$defs/countOrNull" },
+        "maintainability": { "$ref": "#/$defs/countOrNull" }
+      }
+    },
+
+    "ratings": {
+      "description": "Optional (may be missing or null). Sonar rating metrics mapped 1-5 -> A-E.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["reliability", "security", "maintainability"],
+      "properties": {
+        "reliability": { "$ref": "#/$defs/ratingOrNull" },
+        "security": { "$ref": "#/$defs/ratingOrNull" },
+        "maintainability": { "$ref": "#/$defs/ratingOrNull" }
+      }
+    },
+
+    "hotspots": {
+      "description": "Optional (may be missing or null). Security hotspots.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["total", "reviewedPercent"],
+      "properties": {
+        "total": { "$ref": "#/$defs/countOrNull" },
+        "reviewedPercent": { "$ref": "#/$defs/percentOrNull", "description": "null when there are no hotspots to review." }
+      }
+    },
+
+    "gateCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric", "comparator", "threshold", "actual", "status"],
+      "properties": {
+        "metric": {
+          "description": "Our metric name. The known names are listed; any other Sonar metric is passed as camelCase of its key (new_foo_bar -> newFooBar) and the dashboard shows it as is.",
+          "anyOf": [
+            { "enum": [
+              "newIssues", "newHotspotsReviewed", "newCoverage", "newDuplication",
+              "newReliabilityRating", "newSecurityRating", "newMaintainabilityRating",
+              "issues", "hotspotsReviewed", "coverage", "duplication",
+              "reliabilityRating", "securityRating", "maintainabilityRating"
+            ] },
+            { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" }
+          ]
+        },
+        "comparator": { "enum": ["gt", "lt"], "description": "gt: fails when actual > threshold. lt: fails when actual < threshold." },
+        "threshold": { "$ref": "#/$defs/conditionValue" },
+        "actual": {
+          "anyOf": [ { "$ref": "#/$defs/conditionValue" }, { "type": "null" } ],
+          "description": "null when Sonar has no value (e.g. no new code)."
+        },
+        "status": { "enum": ["passed", "failed"] }
+      }
+    },
+
+    "conditionValue": {
+      "description": "Percent metrics: number 0-100 with one decimal. Count metrics: integer. Rating metrics: A-E.",
+      "anyOf": [
+        { "type": "number", "minimum": 0 },
+        { "enum": ["A", "B", "C", "D", "E"] }
+      ]
+    },
+
+    "claudeCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transaction", "concurrency", "scale", "failure", "other"],
+      "properties": {
+        "transaction": { "type": "integer", "minimum": 0 },
+        "concurrency": { "type": "integer", "minimum": 0 },
+        "scale": { "type": "integer", "minimum": 0 },
+        "failure": { "type": "integer", "minimum": 0 },
+        "other": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "severity", "file", "line", "message", "firstSeen"],
+      "properties": {
+        "category": { "enum": ["transaction", "concurrency", "scale", "failure", "other"] },
+        "severity": { "enum": ["high", "medium", "low"] },
+        "file": { "$ref": "#/$defs/relativePath" },
+        "line": { "type": ["integer", "null"], "minimum": 1, "description": "null for a file-level finding." },
+        "message": { "type": "string", "minLength": 1 },
+        "firstSeen": { "$ref": "#/$defs/time", "description": "When this finding first appeared, from the findings ledger. ISO 8601 +09:00." }
+      }
+    },
+
+    "sonarIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "impacts", "file", "line", "message"],
+      "properties": {
+        "rule": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$", "description": "Sonar rule key, e.g. java:S1192." },
+        "impacts": {
+          "type": "array",
+          "minItems": 1,
+          "description": "One entry per software quality the issue affects (Sonar MQR mode).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["quality", "severity"],
+            "properties": {
+              "quality": { "enum": ["reliability", "security", "maintainability"] },
+              "severity": { "enum": ["blocker", "high", "medium", "low", "info"] }
+            }
+          }
+        },
+        "file": {
+          "anyOf": [ { "$ref": "#/$defs/relativePath" }, { "type": "null" } ],
+          "description": "null for a project-level issue."
+        },
+        "line": { "type": ["integer", "null"], "minimum": 1, "description": "null for a file- or project-level issue." },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

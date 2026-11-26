@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "runs": [
+    {
+      "at": "2026-11-21T21:00:00+09:00",
+      "commit": "0000000000000000000000000000000000000001",
+      "qualityGate": "failed",
+      "coverage": 55.0,
+      "newCoverage": 61.2,
+      "issues": { "reliability": 4, "security": 1, "maintainability": 11 },
+      "claude": { "transaction": 2, "concurrency": 2, "scale": 1, "failure": 1, "other": 0 }
+    },
+    {
+      "at": "2026-11-22T21:00:00+09:00",
+      "commit": "0000000000000000000000000000000000000002",
+      "qualityGate": "failed",
+      "coverage": 60.3,
+      "newCoverage": 70.0,
+      "issues": { "reliability": 3, "security": 1, "maintainability": 10 },
+      "claude": { "transaction": 2, "concurrency": 1, "scale": 1, "failure": 1, "other": 0 }
+    },
+    {
+      "at": "2026-11-23T21:00:00+09:00",
+      "commit": "0000000000000000000000000000000000000003",
+      "qualityGate": "passed",
+      "coverage": 64.8,
+      "newCoverage": 82.5,
+      "issues": { "reliability": 3, "security": 0, "maintainability": 9 },
+      "claude": null
+    },
+    {
+      "at": "2026-11-24T21:00:00+09:00",
+      "commit": "0000000000000000000000000000000000000004",
+      "qualityGate": "passed",
+      "coverage": 68.1,
+      "newCoverage": 81.0,
+      "issues": { "reliability": 2, "security": 0, "maintainability": 8 },
+      "claude": { "transaction": 1, "concurrency": 2, "scale": 1, "failure": 1, "other": 1 }
+    },
+    {
+      "at": "2026-11-25T21:00:00+09:00",
+      "commit": "0000000000000000000000000000000000000005",
+      "qualityGate": "passed",
+      "coverage": 70.9,
+      "newCoverage": 83.3,
+      "issues": { "reliability": 2, "security": 0, "maintainability": 7 },
+      "claude": { "transaction": 1, "concurrency": 1, "scale": 1, "failure": 1, "other": 1 }
+    },
+    {
+      "at": "2026-11-26T21:00:00+09:00",
+      "commit": "3751f3498849906ad5d0734cf7648987b58469f0",
+      "qualityGate": "passed",
+      "coverage": 72.4,
+      "newCoverage": 84.2,
+      "issues": { "reliability": 2, "security": 0, "maintainability": 6 },
+      "claude": { "transaction": 1, "concurrency": 1, "scale": 1, "failure": 1, "other": 1 }
+    }
+  ]
+}
