@@ -100,6 +100,8 @@ pipeline {
     stage('sonar') {
       steps {
         // A failed gate makes the scanner exit non-zero; keep going and publish it as a result.
+        // sonar.scm.revision: otherwise the scanner takes Jenkins' GIT_COMMIT, which is this
+        // repo's commit, not the target's (seen in build #4).
         catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
           withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
             dir('target') {
@@ -107,6 +109,7 @@ pipeline {
                 sh ./gradlew --no-daemon --init-script "$INIT" sonar \
                   -Dsonar.projectKey="$PROJECT_ID" \
                   -Dsonar.projectName="$TARGET_NAME" \
+                  -Dsonar.scm.revision="$TARGET_COMMIT" \
                   -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml \
                   -Dsonar.qualitygate.wait=true \
                   -Dsonar.qualitygate.timeout=600

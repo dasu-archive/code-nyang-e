@@ -75,7 +75,7 @@ $(sed 's/^/- /' "$out/scope.txt")"
   set +e
   timeout "${CLAUDE_REVIEW_TIMEOUT:-25m}" claude -p "$prompt" \
     --output-format json \
-    --json-schema "$(cat "$here/findings.schema.json")" \
+    --json-schema "$(jq -c 'del(."$schema")' "$here/findings.schema.json")" \
     --tools "Read,Grep,Glob" \
     --allowedTools "Read,Grep,Glob" \
     --permission-mode dontAsk \
