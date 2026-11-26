@@ -96,6 +96,7 @@ mode = os.environ.get("STUB_OPINION", "good")
 paragraphs = {
     "good": ["품질 게이트를 통과했어요. 새 코드 커버리지는 84.2%예요.", "Claude 리뷰는 high 1개를 짚었어요."],
     "invented": ["커버리지가 지난번보다 12.5% 올랐어요."],
+    "quote": ["조회 실패가 HTTP 500으로 나가는 지적이 있어요."],
 }[mode]
 print(json.dumps({"type": "result", "subtype": "success", "structured_output": {"paragraphs": paragraphs}}))
 """
@@ -127,6 +128,9 @@ class BuildReportTest(unittest.TestCase):
              "message": "정원 확인 후 저장해서 경합이 생겨요.", "firstSeen": "2026-11-26T21:00:00+09:00"},
             {"category": "scale", "severity": "medium", "file": FILE, "line": None,
              "message": "페이징 없이 전체를 가져와요.", "firstSeen": "2026-11-26T21:00:00+09:00"},
+            {"category": "failure", "severity": "medium", "file": FILE, "line": 62,
+             "message": "orElseThrow()가 NoSuchElementException을 던져서 500으로 나가요.",
+             "firstSeen": "2026-11-26T21:00:00+09:00"},
         ]}, ensure_ascii=False), encoding="utf-8")
         self.yml = t / "projects.yml"
         self.yml.write_text("projects:\n  - id: rehab\n    name: rehab\n    repo: dasu-archive/rehab\n    branch: main\n")
@@ -183,6 +187,11 @@ class BuildReportTest(unittest.TestCase):
         os.environ["STUB_OPINION"] = "invented"
         self.assertEqual(self.run_report(), 0)
         self.assertIsNone(self.latest()["opinion"])
+
+    def test_number_quoted_from_a_finding_message_is_kept(self):
+        os.environ["STUB_OPINION"] = "quote"
+        self.assertEqual(self.run_report(), 0)
+        self.assertIsNotNone(self.latest()["opinion"])
 
     def test_failed_review_nulls_claude_and_opinion(self):
         self.assertEqual(self.run_report(findings=False), 0)

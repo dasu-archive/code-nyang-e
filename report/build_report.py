@@ -349,7 +349,9 @@ def allowed_numbers(latest):
     def walk(n):
         if isinstance(n, dict):
             for k, v in n.items():
-                if k not in ("commit", "at", "firstSeen", "message"):
+                # Messages count: the opinion may quote them (e.g. "HTTP 500").
+                # Hashes and timestamps do not, or almost any number would pass.
+                if k not in ("commit", "at", "firstSeen"):
                     walk(v)
         elif isinstance(n, list):
             for v in n:
