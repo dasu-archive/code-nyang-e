@@ -1,0 +1,98 @@
+# code-nyang-e: Jenkins + SonarQube Community Build + PostgreSQL on the mini PC.
+# Ports are for the LAN only. Do not forward them on the router.
+# Secrets come from .env (not committed). See .env.example.
+#
+# Memory limits are starting values for a 9GB WSL 2 VM (.wslconfig).
+# Revisit them after the first real pipeline run (T8).
+
+name: code-nyang-e
+
+services:
+  db:
+    image: postgres:18.7
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: sonar
+      TZ: Asia/Seoul
+    volumes:
+      # PostgreSQL 18+ images keep data under /var/lib/postgresql/18/docker,
+      # so the volume goes on /var/lib/postgresql (not .../data).
+      - postgres_data:/var/lib/postgresql
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 768m
+    restart: unless-stopped
+
+  # SonarQube's Elasticsearch needs vm.max_map_count >= 524288.
+  # Docker Desktop resets it to 262144 on every start and .wslconfig cannot
+  # override that, so this container sets it and then stays idle.
+  # It is not namespaced: setting it here changes the whole Docker VM.
+  sonar-sysctl:
+    image: busybox:1.37
+    privileged: true
+    init: true
+    command: ["sh", "-c", "sysctl -w vm.max_map_count=524288 && exec sleep 2147483647"]
+    network_mode: none
+    mem_limit: 16m
+    restart: unless-stopped
+
+  sonarqube:
+    image: sonarqube:26.11.0.134175-community
+    depends_on:
+      db:
+        condition: service_healthy
+      sonar-sysctl:
+        condition: service_started
+    # depends_on only applies to `docker compose up`. After a reboot Docker
+    # starts all containers at once; if SonarQube wins the race against
+    # sonar-sysctl it exits and restart: unless-stopped starts it again.
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      TZ: Asia/Seoul
+    volumes:
+      # Named volumes only. Sonar docs: bind mounts break plugin setup.
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    ulimits:
+      nofile:
+        soft: 131072
+        hard: 131072
+      nproc:
+        soft: 8192
+        hard: 8192
+    ports:
+      - "9000:9000"
+    # Default heap: web 1G + compute engine 1.5G + search 512M = 3G.
+    mem_limit: 4g
+    stop_grace_period: 2m
+    restart: unless-stopped
+
+  jenkins:
+    # T4 replaces this with a build from jenkins/Dockerfile
+    # (JDK for the target projects, git, Python 3, Claude Code CLI).
+    image: jenkins/jenkins:2.580.3-lts-jdk21
+    environment:
+      TZ: Asia/Seoul
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    ports:
+      # 50000 (inbound agents) is not published: builds run on this controller.
+      - "8080:8080"
+    # Pipelines run Gradle builds inside this container.
+    mem_limit: 3g
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  jenkins_home:

@@ -1,0 +1,22 @@
+CLAUDE.local.md
+
+# Secrets: never commit. Only .env.example (no values) goes in the repo.
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local build and run output
+build/
+out/
+.gradle/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

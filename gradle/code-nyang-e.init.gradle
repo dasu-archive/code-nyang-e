@@ -1,0 +1,19 @@
+initscript {
+  repositories { gradlePluginPortal() }
+  dependencies {
+    classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:7.6.0.18749'
+  }
+}
+
+allprojects {
+  plugins.withId('java') {              // 자바 프로젝트에만
+    apply plugin: 'jacoco'              // Gradle 내장이라 id로 됨
+    tasks.named('jacocoTestReport') {
+      reports { xml.required = true }   // Sonar가 읽는 XML
+    }
+  }
+}
+
+rootProject {
+  apply plugin: org.sonarqube.gradle.SonarQubePlugin   // 외부 플러그인은 클래스로
+}
