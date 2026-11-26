@@ -76,11 +76,15 @@ services:
     restart: unless-stopped
 
   jenkins:
-    # T4 replaces this with a build from jenkins/Dockerfile
-    # (JDK for the target projects, git, Python 3, Claude Code CLI).
-    image: jenkins/jenkins:2.580.3-lts-jdk21
+    # jenkins/Dockerfile: Jenkins LTS + Python 3, jq, Claude Code CLI, plugins.txt.
+    build:
+      context: ./jenkins
+    image: code-nyang-e/jenkins:2.580.3
     environment:
       TZ: Asia/Seoul
+      # Plugins from the image may upgrade ones the setup wizard installed
+      # (those have no version marker files).
+      TRY_UPGRADE_IF_NO_MARKER: "true"
     volumes:
       - jenkins_home:/var/jenkins_home
     ports:

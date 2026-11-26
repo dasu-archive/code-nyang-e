@@ -1,0 +1,26 @@
+# Plugins the code-nyang-e pipelines need. jenkins-plugin-cli resolves dependencies.
+# Installed when the image is built, from the mirror set in jenkins/Dockerfile.
+
+# Declarative pipeline, stages, withCredentials
+workflow-aggregator
+pipeline-model-definition
+credentials-binding
+plain-credentials
+
+# Checkout of target repos and of code-nyang-e itself
+git
+
+# post { junit ... }
+junit
+
+# SonarQube Scanner for Jenkins (withSonarQubeEnv, waitForQualityGate)
+sonar
+
+# cleanWs()
+ws-cleanup
+
+# Timestamps in the console log
+timestamper
+
+# readYaml for projects.yml
+pipeline-utility-steps
