@@ -1,5 +1,7 @@
 # code-nyang-e: Jenkins + SonarQube Community Build + PostgreSQL on the mini PC.
-# Ports are for the LAN only. Do not forward them on the router.
+# Ports are published on 127.0.0.1 only (decision 2026-11-26): the web UIs are reachable
+# from this PC alone, not from the LAN. Use Remote Desktop to this PC to open them
+# from elsewhere. Containers still reach each other by service name (http://sonarqube:9000).
 # Secrets come from .env (not committed). See .env.example.
 #
 # Memory limits are starting values for a 9GB WSL 2 VM (.wslconfig).
@@ -69,7 +71,7 @@ services:
         soft: 8192
         hard: 8192
     ports:
-      - "9000:9000"
+      - "127.0.0.1:9000:9000"
     # Default heap: web 1G + compute engine 1.5G + search 512M = 3G.
     mem_limit: 4g
     stop_grace_period: 2m
@@ -92,7 +94,7 @@ services:
       - jenkins_home:/var/jenkins_home
     ports:
       # 50000 (inbound agents) is not published: builds run on this controller.
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     # Pipelines run Gradle builds inside this container.
     mem_limit: 3g
     restart: unless-stopped
