@@ -41,3 +41,6 @@ USER jenkins
 ARG JENKINS_UC_DOWNLOAD_URL=https://ftp.yz.yamagata-u.ac.jp/pub/misc/jenkins/plugins
 COPY --chown=jenkins:jenkins plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --verbose -f /usr/share/jenkins/ref/plugins.txt
+
+# Jobs. Copied into JENKINS_HOME on start only if the job does not exist yet.
+COPY --chown=jenkins:jenkins jobs/ /usr/share/jenkins/ref/jobs/

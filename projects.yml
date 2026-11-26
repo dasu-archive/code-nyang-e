@@ -1,0 +1,11 @@
+# Projects code-nyang-e inspects. One Jenkins build per project (PROJECT_ID parameter).
+#   id      dashboard folder name projects/<id>/ and Sonar project key: lowercase, digits, hyphens
+#   name    display name
+#   repo    GitHub owner/name (public)
+#   branch  branch to inspect
+
+projects:
+  - id: rehab
+    name: rehab
+    repo: dasu-archive/rehab
+    branch: main
